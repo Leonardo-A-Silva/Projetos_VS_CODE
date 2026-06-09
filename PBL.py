@@ -1,5 +1,6 @@
 
 editado para test de conexão
+second alteration
 
 import pygame
 from pygame.locals import *

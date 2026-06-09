@@ -407,4 +407,14 @@ def main():
 if __name__ == "__main__":
     main()
 
-    
+"""
+O que você deve editar (Dicas Práticas):
+Gráficos: Na pasta do seu projeto, salve as imagens (ex: nave.png, vader.png). 
+No código, vá na classe do personagem (ex: Player), apague a linha self.image = pygame.Surface((40, 40)) e ative a linha de cima substituindo o nome do arquivo da imagem. 
+Você pode precisar redimensionar a imagem usando pygame.transform.scale().
+Sons e Música (Guia 6): Crie uma pasta sons. 
+No início do bloco main() inicialize a música com pygame.mixer.music.load('sons/fundo.ogg') e pygame.mixer.music.play(-1).
+
+Mecânica de Onda (Barema): O jogo atual pausa os stormtroopers e invoca o Darth Vader ao chegar nos 200 pontos. 
+Se quiser prolongar o jogo para testar, altere o valor de score >= 200 no bloco update para 500 ou 1000.
+"""

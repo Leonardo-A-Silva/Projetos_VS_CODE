@@ -1,6 +1,6 @@
 
-editado para test de conexão
-second alteration
+#editado para test de conexão
+#segunda alteração
 
 import pygame
 from pygame.locals import *

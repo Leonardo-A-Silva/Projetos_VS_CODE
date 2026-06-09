@@ -1,4 +1,6 @@
 
+editado para test de conexão
+
 import pygame
 from pygame.locals import *
 from sys import exit

@@ -19,21 +19,22 @@ Código Python (main.py)
 """
 
 import pygame
+print(pygame.version.ver)
 import random
 import json
 import os
 
 # ==========================================
-# 1. CONFIGURAÇÕES INICIAIS (GUIA 1)
+# 1. CONFIGURAÇÕES INICIAIS
 # ==========================================
 pygame.init()
 
-# Dimensões da tela
+# Dimensões da tela do jogo
 WIDTH = 800
 HEIGHT = 600
-FPS = 60
+FPS = 60            #Loop por segundo
 
-# Cores (RGB)
+# Definição de Cores
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -42,41 +43,28 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT))                 #Tupla
+screen_original = pygame.image.load("SPACE.jpg").convert()
+screen_image = pygame.transform.scale(screen_original, (WIDTH, HEIGHT))
 pygame.display.set_caption("A Invasão do Império: O Despertar do Guardião")
-clock = pygame.time.Clock()
+clock = pygame.time.Clock()                                       #Relogio 
 font = pygame.font.SysFont("arial", 24, bold=True)
 title_font = pygame.font.SysFont("arial", 48, bold=True)
 
-# ==========================================
-# 2. PERSISTÊNCIA DE DADOS (GUIA 5)
-# ==========================================
-RANKING_FILE = "ranking.json"
-
-def load_ranking():
-    if os.path.exists(RANKING_FILE):
-        with open(RANKING_FILE, "r") as file:
-            return json.load(file)
-    return []
-
-def save_ranking(score):
-    ranking = load_ranking()
-    ranking.append({"pontos": score})
-    ranking = sorted(ranking, key=lambda x: x["pontos"], reverse=True)[:5] # Top 5
-    with open(RANKING_FILE, "w") as file:
-        json.dump(ranking, file, indent=4)
+pygame.mixer.init()                                             #Musica (inicialização, importação, volume e play)
+pygame.mixer.music.load('invasion-music.mp3') 
+pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.play(-1)
 
 # ==========================================
-# 3. CLASSES (SPRITES) (GUIAS 2 E 4)
+# 2. CLASSES (SPRITES)
 # ==========================================
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
-        super().__init__()
-        # EXEMPLO DE EDIÇÃO: Para usar uma imagem real, comente a linha da Surface/fill e descomente a linha abaixo:
-        # self.image = pygame.image.load("nave_guardiao.png").convert_alpha()
-        self.image = pygame.Surface((40, 40))
-        self.image.fill(BLUE)
+        super().__init__()                          #inicialização  
+        imagem_original = pygame.image.load("PLAYER.png").convert_alpha() # NAVE DO PLAYER        
+        self.image = pygame.transform.scale(imagem_original, (50, 50))
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH // 2
         self.rect.bottom = HEIGHT - 20
@@ -116,17 +104,20 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, difficulty_speed):
         super().__init__()
-        self.image = pygame.Surface((30, 30))
-        self.image.fill(RED) # Stormtrooper genérico
+        imagem_original = pygame.image.load("ENEMY.png").convert_alpha()
+        self.image = pygame.transform.scale(imagem_original, (30, 30))
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(0, WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
-        self.speedy = random.randrange(1, 3) + difficulty_speed
+        if difficulty_speed == 0:
+            self.speedy = random.uniform(0.5, 1.5)          # Velocidade facil entre 0.5 e 1.5
+        else:
+            self.speedy = random.randrange(1, 3) + difficulty_speed
         self.health = 1
 
     def update(self):
         self.rect.y += self.speedy
-        if self.rect.top > HEIGHT + 10: # Saiu da tela, recria lá em cima
+        if self.rect.top > HEIGHT + 10:                                 # Saiu da tela, recria lá em cima
             self.rect.x = random.randrange(0, WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100, -40)
             self.speedy = random.randrange(1, 4)
@@ -141,8 +132,8 @@ class Enemy(pygame.sprite.Sprite):
 class Boss(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((80, 80))
-        self.image.fill(PURPLE) # Darth Vader
+        imagem_original = pygame.image.load("BOSS.png").convert_alpha()         # Darth Vader
+        self.image = pygame.transform.scale(imagem_original, (80, 80))
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH // 2
         self.rect.y = -100
@@ -197,6 +188,24 @@ class Bacta(pygame.sprite.Sprite): # Item de Vida (Barema)
             self.kill()
 
 # ==========================================
+# 3. PERSISTÊNCIA DE DADOS (GUIA 5)
+# ==========================================
+RANKING_FILE = "ranking.json"
+
+def load_ranking():
+    if os.path.exists(RANKING_FILE):
+        with open(RANKING_FILE, "r") as file:
+            return json.load(file)
+    return []
+
+def save_ranking(score):
+    ranking = load_ranking()
+    ranking.append({"pontos": score})
+    ranking = sorted(ranking, key=lambda x: x["pontos"], reverse=True)[:5] # Top 5
+    with open(RANKING_FILE, "w") as file:
+        json.dump(ranking, file, indent=4)
+
+# ==========================================
 # 4. INTERFACE E TELAS (HUD E MENUS)
 # ==========================================
 
@@ -217,7 +226,7 @@ def draw_health_bar(surf, x, y, pct):
     pygame.draw.rect(surf, WHITE, outline_rect, 2)
 
 # ==========================================
-# 5. LOOP PRINCIPAL (MÁQUINA DE ESTADOS)
+# 5. LOOP PRINCIPAL 
 # ==========================================
 def main():
     game_state = "MENU"
@@ -358,8 +367,8 @@ def main():
                     player.health += 1
 
         # 3. RENDERIZAÇÃO (DRAW)
-        screen.fill(BLACK) # Fundo do espaço
-
+        screen.blit(screen_image, (0, 0))  # Fundo do espaço
+        
         if game_state == "MENU":
             draw_text(screen, "A Invasão do Império", 48, WIDTH//2, HEIGHT//4, YELLOW)
             draw_text(screen, "Aperte [1] para Nível Fácil", 24, WIDTH//2, HEIGHT//2)

@@ -1,40 +1,21 @@
-"""
-Com base no PBL (A Invasão do Império: O Despertar do Guardião), no Barema de avaliação e nos 6 Guias de Estudo de Pygame que você enviou, desenvolvi um código base completo e altamente modularizado.
 
-Para garantir que você possa rodar o jogo imediatamente assim que copiar o código, eu utilizei blocos de cores (Surfaces) para representar os personagens. No entanto, deixei comentários explícitos e bem didáticos mostrando exatamente onde e como você deve substituir essas formas por imagens (.png) e como adicionar sons (.wav/.ogg), conforme ensinado nos seus Guias 2 e 6.
-
-Estrutura do Código
-O código está dividido em:
-
-Configurações e Constantes: Cores, tamanhos, frames.
-
-Sistema de Arquivos: Função pronta para salvar e ler Ranking em JSON (Guia 05).
-
-Classes (Orientação a Objetos): Player, Enemy, Boss, Laser, Bacta (Item de cura). Tudo usando Grupos de Sprites (Guia 04).
-
-Gerenciador do Jogo: Funções para os Menus e o Loop Principal (HUD, cronômetro e dificuldades).
-
-Código Python (main.py)
-
-"""
-
+import os
+import json
+import random
 import pygame
 print(pygame.version.ver)
-import random
-import json
-import os
 
 # ==========================================
 # 1. CONFIGURAÇÕES INICIAIS
 # ==========================================
 pygame.init()
 
-# Dimensões da tela do jogo
+#                                                                                                                    Dimensões da tela do jogo
 WIDTH = 800
 HEIGHT = 600
-FPS = 60            #Loop por segundo
+FPS = 60  # Loop por segundo
 
-# Definição de Cores
+#                                                                                                                   Definição de Cores
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -43,27 +24,29 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))                 #Tupla
+screen = pygame.display.set_mode((WIDTH, HEIGHT))  # Tupla
 screen_original = pygame.image.load("SPACE.jpg").convert()
 screen_image = pygame.transform.scale(screen_original, (WIDTH, HEIGHT))
 pygame.display.set_caption("A Invasão do Império: O Despertar do Guardião")
-clock = pygame.time.Clock()                                       #Relogio 
+clock = pygame.time.Clock()  # Relogio
 font = pygame.font.SysFont("arial", 24, bold=True)
 title_font = pygame.font.SysFont("arial", 48, bold=True)
-
-pygame.mixer.init()                                             #Musica (inicialização, importação, volume e play)
+"""
+pygame.mixer.init()                                                                                                   #Musica (inicialização, importação, volume e play)
 pygame.mixer.music.load('invasion-music.mp3') 
 pygame.mixer.music.set_volume(0.5)
-pygame.mixer.music.play(-1)
+pygame.mixer.music.play(-1) """
 
 # ==========================================
 # 2. CLASSES (SPRITES)
 # ==========================================
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
-        super().__init__()                          #inicialização  
-        imagem_original = pygame.image.load("PLAYER.png").convert_alpha() # NAVE DO PLAYER        
+        super().__init__()  # inicialização
+        imagem_original = pygame.image.load("PLAYER.png").convert_alpha(
+        )                                                       # NAVE DO PLAYER
         self.image = pygame.transform.scale(imagem_original, (50, 50))
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH // 2
@@ -71,10 +54,11 @@ class Player(pygame.sprite.Sprite):
         self.speed = 5
         self.health = 3
         self.last_shot = pygame.time.get_ticks()
-        self.shoot_delay = 250 # Milissegundos entre tiros
+        # Milissegundos entre tiros
+        self.shoot_delay = 250
 
     def update(self):
-        # Movimentação em todas as direções (Guia 3 e Barema)
+        #                                                                                                           Movimentação em todas as direções
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.rect.x -= self.speed
@@ -86,20 +70,26 @@ class Player(pygame.sprite.Sprite):
             self.rect.y += self.speed
 
         # Limites da tela
-        if self.rect.left < 0: self.rect.left = 0
-        if self.rect.right > WIDTH: self.rect.right = WIDTH
-        if self.rect.top < 0: self.rect.top = 0
-        if self.rect.bottom > HEIGHT: self.rect.bottom = HEIGHT
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+        if self.rect.top < 0:
+            self.rect.top = 0
+        if self.rect.bottom > HEIGHT:
+            self.rect.bottom = HEIGHT
 
     def shoot(self, all_sprites, bullets):
         now = pygame.time.get_ticks()
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
-            bullet = Laser(self.rect.centerx, self.rect.top, -10, YELLOW) # Tiro sobe (-y)
+            # Tiro sobe (-y)
+            bullet = Laser(self.rect.centerx, self.rect.top, -10, YELLOW)
             all_sprites.add(bullet)
             bullets.add(bullet)
-            # EXEMPLO: Para som de tiro (Guia 6):
+            #                                                                                                        EXEMPLO: Para som de tiro:
             # som_tiro.play()
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, difficulty_speed):
@@ -110,52 +100,62 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.x = random.randrange(0, WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100, -40)
         if difficulty_speed == 0:
-            self.speedy = random.uniform(0.5, 1.5)          # Velocidade facil entre 0.5 e 1.5
+            # Velocidade facil entre 1 e 2
+            self.speedy = random.uniform(1, 2)
         else:
             self.speedy = random.randrange(1, 3) + difficulty_speed
         self.health = 1
 
     def update(self):
         self.rect.y += self.speedy
-        if self.rect.top > HEIGHT + 10:                                 # Saiu da tela, recria lá em cima
+        # Saiu da tela, recria lá em cima
+        if self.rect.top > HEIGHT + 10:
             self.rect.x = random.randrange(0, WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100, -40)
             self.speedy = random.randrange(1, 4)
 
     def shoot(self, all_sprites, enemy_bullets):
-        # Chance aleatória do inimigo atirar
-        if random.random() > 0.99: 
-            bullet = Laser(self.rect.centerx, self.rect.bottom, 5, RED) # Tiro desce (+y)
+        #                                                                                                           Chance aleatória do inimigo atirar
+        if random.random() > 0.99:
+            # Tiro desce (+y)
+            bullet = Laser(self.rect.centerx, self.rect.bottom, 5, RED)
             all_sprites.add(bullet)
             enemy_bullets.add(bullet)
+
 
 class Boss(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        imagem_original = pygame.image.load("BOSS.png").convert_alpha()         # Darth Vader
+        imagem_original = pygame.image.load("BOSS.png").convert_alpha(
+        )                                                   # Darth Vader
         self.image = pygame.transform.scale(imagem_original, (80, 80))
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH // 2
         self.rect.y = -100
-        self.speedx = 3
-        self.health = 5 # Vader precisa de 5 acertos (Barema)
-        self.damage = 2 # Dano duplo no jogador (Barema)
+        self.speedx = 4
+        # Vader precisa de 5 acertos
+        self.health = 5
+        # Dano duplo no jogador
+        self.damage = 2
 
     def update(self):
-        # Desce até o topo da tela, depois fica movendo para os lados
+        #                                                                                           Desce até o topo da tela, depois fica movendo para os lados
         if self.rect.y < 50:
             self.rect.y += 2
         else:
             self.rect.x += self.speedx
             if self.rect.right > WIDTH or self.rect.left < 0:
-                self.speedx *= -1 # Inverte direção bate e volta
+                # Inverte direção bate e volta
+                self.speedx *= -1
 
     def shoot(self, all_sprites, enemy_bullets):
-        if random.random() > 0.96: # Chefe atira mais rápido
+        # Chefe atira mais rápido
+        if random.random() > 0.96:
             bullet1 = Laser(self.rect.left + 20, self.rect.bottom, 7, RED)
             bullet2 = Laser(self.rect.right - 20, self.rect.bottom, 7, RED)
             all_sprites.add(bullet1, bullet2)
             enemy_bullets.add(bullet1, bullet2)
+
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, x, y, speed, color):
@@ -173,7 +173,9 @@ class Laser(pygame.sprite.Sprite):
         if self.rect.bottom < 0 or self.rect.top > HEIGHT:
             self.kill()
 
-class Bacta(pygame.sprite.Sprite): # Item de Vida (Barema)
+
+# Item de Vida
+class Bacta(pygame.sprite.Sprite):
     def __init__(self, center):
         super().__init__()
         self.image = pygame.Surface((20, 20))
@@ -187,10 +189,12 @@ class Bacta(pygame.sprite.Sprite): # Item de Vida (Barema)
         if self.rect.top > HEIGHT:
             self.kill()
 
+
 # ==========================================
 # 3. PERSISTÊNCIA DE DADOS (GUIA 5)
 # ==========================================
 RANKING_FILE = "ranking.json"
+
 
 def load_ranking():
     if os.path.exists(RANKING_FILE):
@@ -198,10 +202,12 @@ def load_ranking():
             return json.load(file)
     return []
 
+
 def save_ranking(score):
     ranking = load_ranking()
     ranking.append({"pontos": score})
-    ranking = sorted(ranking, key=lambda x: x["pontos"], reverse=True)[:5] # Top 5
+    ranking = sorted(ranking, key=lambda x: x["pontos"], reverse=True)[
+        :5]  # Top 5
     with open(RANKING_FILE, "w") as file:
         json.dump(ranking, file, indent=4)
 
@@ -209,28 +215,35 @@ def save_ranking(score):
 # 4. INTERFACE E TELAS (HUD E MENUS)
 # ==========================================
 
+
 def draw_text(surf, text, size, x, y, color=WHITE):
     msg = font.render(text, True, color)
     rect = msg.get_rect()
     rect.midtop = (x, y)
     surf.blit(msg, rect)
 
+
 def draw_health_bar(surf, x, y, pct):
-    if pct < 0: pct = 0
+    if pct < 0:
+        pct = 0
     BAR_LENGTH = 100
     BAR_HEIGHT = 15
-    fill = (pct / 3) * BAR_LENGTH # 3 vidas é o máximo/inicial
+    # 3 vidas é o máximo/inicial
+    fill = (pct / 3) * BAR_LENGTH
     outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
     fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
     pygame.draw.rect(surf, GREEN, fill_rect)
     pygame.draw.rect(surf, WHITE, outline_rect, 2)
 
 # ==========================================
-# 5. LOOP PRINCIPAL 
+# 5. LOOP PRINCIPAL
 # ==========================================
+
+
 def main():
     game_state = "MENU"
-    difficulty = 0 # 0=Fácil, 1=Médio, 2=Difícil
+    # 0=Fácil, 1=Médio, 2=Difícil
+    difficulty = 0
     score = 0
     boss_spawned = False
     start_ticks = 0
@@ -238,10 +251,12 @@ def main():
     # Grupos de Sprites
     all_sprites = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
-    bullets = pygame.sprite.Group() # Tiros do player
-    enemy_bullets = pygame.sprite.Group() # Tiros dos inimigos
+    # Tiros do player
+    bullets = pygame.sprite.Group()
+    # Tiros dos inimigos
+    enemy_bullets = pygame.sprite.Group()
     items = pygame.sprite.Group()
-    
+
     player = Player()
 
     def reset_game():
@@ -259,7 +274,7 @@ def main():
         all_sprites.add(player)
         start_ticks = pygame.time.get_ticks()
 
-        # Cria inimigos iniciais
+        #                                                                                                             Cria inimigos iniciais
         for i in range(8):
             e = Enemy(difficulty)
             all_sprites.add(e)
@@ -268,38 +283,41 @@ def main():
     running = True
     while running:
         clock.tick(FPS)
-        
-        # 1. CAPTURA DE EVENTOS GERAIS
+
+        #                                                                                                       1. CAPTURA DE EVENTOS GERAIS
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            
-            # Controles de Menu
+
+            #                                                                                                        Controles de Menu
             if game_state == "MENU":
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_1: # Start Fácil
+                    # Start Fácil
+                    if event.key == pygame.K_1:
                         difficulty = 0
                         reset_game()
                         game_state = "PLAYING"
-                    if event.key == pygame.K_2: # Start Difícil
+                    # Start Difícil
+                    if event.key == pygame.K_2:
                         difficulty = 2
                         reset_game()
                         game_state = "PLAYING"
                     if event.key == pygame.K_ESCAPE:
                         running = False
-            
+
             elif game_state == "PLAYING":
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         player.shoot(all_sprites, bullets)
                     if event.key == pygame.K_ESCAPE:
                         game_state = "PAUSE"
-            
+
             elif game_state == "PAUSE":
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_c: # Continuar
+                    if event.key == pygame.K_c:                                                                     # Continuar
                         game_state = "PLAYING"
-                    if event.key == pygame.K_m: # Voltar ao menu
+                    # Voltar ao menu
+                    if event.key == pygame.K_m:
                         game_state = "MENU"
 
             elif game_state in ["GAMEOVER", "VICTORY"]:
@@ -307,123 +325,131 @@ def main():
                     if event.key == pygame.K_RETURN:
                         game_state = "MENU"
 
-        # 2. LÓGICA DO JOGO (UPDATE)
+        #                                                                                                       2. LÓGICA DO JOGO (UPDATE)
         if game_state == "PLAYING":
             all_sprites.update()
             for e in enemies:
                 e.shoot(all_sprites, enemy_bullets)
 
-            # Spawn do Boss (Darth Vader) ao atingir 200 pontos
+            #                                                                                       Spawn do Boss (Darth Vader) ao atingir 200 pontos
             if score >= 200 and not boss_spawned:
                 boss_spawned = True
-                for e in enemies: e.kill() # Limpa os stormtroopers
+                for e in enemies:
+                    # Limpa os stormtroopers
+                    e.kill()
                 boss = Boss()
                 all_sprites.add(boss)
                 enemies.add(boss)
 
-            # COLISÕES (Guia 4)
-            # A) Tiro do Player acerta Inimigo
+            #                                                                                                       COLISÕES
+            #                                                                                           A) Tiro do Player acerta Inimigo
             hits = pygame.sprite.groupcollide(enemies, bullets, False, True)
             for enemy, bullet_list in hits.items():
                 enemy.health -= 1
                 if enemy.health <= 0:
                     enemy.kill()
-                    # Verifica se era o Boss
+                    #                                                                                        Verifica se era o Boss
                     if isinstance(enemy, Boss):
                         score += 200
                         save_ranking(score)
                         game_state = "VICTORY"
                     else:
                         score += 10
-                        # Chance de dropar item de vida
+                        #                                                                                   Chance de dropar item de vida
                         if random.random() > 0.85:
                             item = Bacta(enemy.rect.center)
                             all_sprites.add(item)
                             items.add(item)
-                        # Repõe inimigo normal se boss não spawnou
+                        #                                                                            Repõe inimigo normal se boss não spawnou
                         if not boss_spawned:
                             e = Enemy(difficulty)
                             all_sprites.add(e)
                             enemies.add(e)
 
-            # B) Inimigos ou tiros inimigos acertam o Player
+            #                                                                                     B) Inimigos ou tiros inimigos acertam o Player
             damage_hits = pygame.sprite.spritecollide(player, enemies, True)
-            bullet_hits = pygame.sprite.spritecollide(player, enemy_bullets, True)
-            
+            bullet_hits = pygame.sprite.spritecollide(
+                player, enemy_bullets, True)
+
             for hit in damage_hits + bullet_hits:
                 if isinstance(hit, Boss):
-                    player.health -= 2 # Dano do Vader (Barema)
+                    # Dano do Vader
+                    player.health -= 2
                 else:
                     player.health -= 1
-                
+
                 if player.health <= 0:
                     save_ranking(score)
                     game_state = "GAMEOVER"
 
-            # C) Player pega item de cura
+            #                                                                                                 C) Player pega item de cura
             item_hits = pygame.sprite.spritecollide(player, items, True)
             for hit in item_hits:
-                if player.health < 3: # Limita a vida em 3
+                # Limita a vida em 3
+                if player.health < 3:
                     player.health += 1
 
-        # 3. RENDERIZAÇÃO (DRAW)
-        screen.blit(screen_image, (0, 0))  # Fundo do espaço
-        
+        #                                                                                                        3. RENDERIZAÇÃO (DRAW)
+        # Fundo do espaço
+        screen.blit(screen_image, (0, 0))
+
         if game_state == "MENU":
-            draw_text(screen, "A Invasão do Império", 48, WIDTH//2, HEIGHT//4, YELLOW)
-            draw_text(screen, "Aperte [1] para Nível Fácil", 24, WIDTH//2, HEIGHT//2)
-            draw_text(screen, "Aperte [2] para Nível Difícil", 24, WIDTH//2, HEIGHT//2 + 40)
-            draw_text(screen, "Aperte [ESC] para Sair", 24, WIDTH//2, HEIGHT//2 + 80)
-            
+            draw_text(screen, "A Invasão do Império",
+                      48, WIDTH//2, HEIGHT//4, YELLOW)
+            draw_text(
+                screen, "Aperte [1] para Nível Fácil", 24, WIDTH//2, HEIGHT//2)
+            draw_text(
+                screen, "Aperte [2] para Nível Difícil", 24, WIDTH//2, HEIGHT//2 + 40)
+            draw_text(screen, "Aperte [ESC] para Sair",
+                      24, WIDTH//2, HEIGHT//2 + 80)
+
             # Exibir Ranking simples
             top = load_ranking()
             if top:
-                draw_text(screen, f"Recorde Atual: {top[0]['pontos']} pts", 24, WIDTH//2, HEIGHT - 50, GREEN)
+                draw_text(
+                    screen, f"Recorde Atual: {top[0]['pontos']} pts", 24, WIDTH//2, HEIGHT - 50, GREEN)
 
         elif game_state == "PLAYING":
             all_sprites.draw(screen)
-            
-            # HUD (Barema)
+
+            #                                                                                                                           HUD
             draw_text(screen, f"Score: {score}", 24, 60, 10)
             draw_text(screen, "Vida:", 24, WIDTH - 160, 10)
             draw_health_bar(screen, WIDTH - 110, 15, player.health)
-            
-            # Cronômetro (mm:ss)
+
+            #                                                                                                                    Cronômetro (mm:ss)
             seconds = (pygame.time.get_ticks() - start_ticks) // 1000
             mins = seconds // 60
             secs = seconds % 60
-            draw_text(screen, f"Tempo: {mins:02}:{secs:02}", 24, WIDTH // 2, 10)
+            draw_text(
+                screen, f"Tempo: {mins:02}:{secs:02}", 24, WIDTH // 2, 10)
 
         elif game_state == "PAUSE":
             draw_text(screen, "PAUSADO", 48, WIDTH//2, HEIGHT//3, YELLOW)
-            draw_text(screen, "Aperte [C] para Continuar", 24, WIDTH//2, HEIGHT//2)
-            draw_text(screen, "Aperte [M] para Voltar ao Menu", 24, WIDTH//2, HEIGHT//2 + 40)
+            draw_text(
+                screen, "Aperte [C] para Continuar", 24, WIDTH//2, HEIGHT//2)
+            draw_text(
+                screen, "Aperte [M] para Voltar ao Menu", 24, WIDTH//2, HEIGHT//2 + 40)
 
         elif game_state == "GAMEOVER":
             draw_text(screen, "GAME OVER", 48, WIDTH//2, HEIGHT//3, RED)
-            draw_text(screen, f"Pontuação Final: {score}", 24, WIDTH//2, HEIGHT//2)
-            draw_text(screen, "Aperte [ENTER] para Menu Principal", 24, WIDTH//2, HEIGHT//2 + 60)
+            draw_text(
+                screen, f"Pontuação Final: {score}", 24, WIDTH//2, HEIGHT//2)
+            draw_text(
+                screen, "Aperte [ENTER] para Menu Principal", 24, WIDTH//2, HEIGHT//2 + 60)
 
         elif game_state == "VICTORY":
-            draw_text(screen, "VITÓRIA! A BASE ESTÁ SALVA!", 48, WIDTH//2, HEIGHT//3, GREEN)
-            draw_text(screen, f"Darth Vader foi derrotado! Pontuação: {score}", 24, WIDTH//2, HEIGHT//2)
-            draw_text(screen, "Aperte [ENTER] para Menu Principal", 24, WIDTH//2, HEIGHT//2 + 60)
+            draw_text(screen, "VITÓRIA! A BASE ESTÁ SALVA!",
+                      48, WIDTH//2, HEIGHT//3, GREEN)
+            draw_text(
+                screen, f"Darth Vader foi derrotado! Pontuação: {score}", 24, WIDTH//2, HEIGHT//2)
+            draw_text(
+                screen, "Aperte [ENTER] para Menu Principal", 24, WIDTH//2, HEIGHT//2 + 60)
 
         pygame.display.flip()
 
     pygame.quit()
 
+
 if __name__ == "__main__":
     main()
-
-"""
-O que você deve editar (Dicas Práticas):
-Gráficos: Na pasta do seu projeto, salve as imagens (ex: nave.png, vader.png). 
-No código, vá na classe do personagem (ex: Player), apague a linha self.image = pygame.Surface((40, 40)) e ative a linha de cima substituindo o nome do arquivo da imagem. 
-Você pode precisar redimensionar a imagem usando pygame.transform.scale().
-Sons e Música (Guia 6): Crie uma pasta sons. 
-No início do bloco main() inicialize a música com pygame.mixer.music.load('sons/fundo.ogg') e pygame.mixer.music.play(-1).
-
-Mecânica de Onda (Barema): O jogo atual pausa os stormtroopers e invoca o Darth Vader ao chegar nos 200 pontos. 
-Se quiser prolongar o jogo para testar, altere o valor de score >= 200 no bloco update para 500 ou 1000.
-"""
